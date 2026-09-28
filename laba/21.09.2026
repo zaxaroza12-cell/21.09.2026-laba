@@ -1,1 +1,121 @@
+import { useState, useMemo } from "react";
+import { Plus, Trash2, CheckCircle2, Circle, ListTodo } from "lucide-react";
 
+export default function TodoApp() {
+  const [tasks, setTasks] = useState([
+    { id: 1, text: "Изучить хуки React", done: true },
+    { id: 2, text: "Написать первый компонент", done: false },
+    { id: 3, text: "Разобраться с useEffect", done: false },
+  ]);
+  const [input, setInput] = useState("");
+  const [filter, setFilter] = useState("all");
+
+  const visibleTasks = useMemo(() => {
+    if (filter === "active") return tasks.filter((t) => !t.done);
+    if (filter === "done") return tasks.filter((t) => t.done);
+    return tasks;
+  }, [tasks, filter]);
+
+  const doneCount = tasks.filter((t) => t.done).length;
+
+  function addTask() {
+    const trimmed = input.trim();
+    if (!trimmed) return;
+    setTasks([...tasks, { id: Date.now(), text: trimmed, done: false }]);
+    setInput("");
+  }
+
+  function toggleTask(id) {
+    setTasks(tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+  }
+
+  function removeTask(id) {
+    setTasks(tasks.filter((t) => t.id !== id));
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-900 text-slate-100 flex items-start justify-center p-6">
+      <div className="w-full max-w-md bg-slate-800 rounded-2xl shadow-xl p-6 space-y-5">
+        <div className="flex items-center gap-2">
+          <ListTodo className="text-emerald-400" size={26} />
+          <h1 className="text-xl font-semibold">Мои задачи</h1>
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addTask()}
+            placeholder="Новая задача..."
+            className="flex-1 px-3 py-2 rounded-lg bg-slate-700 outline-none focus:ring-2 focus:ring-emerald-500 placeholder-slate-400"
+          />
+          <button
+            onClick={addTask}
+            className="px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-medium transition"
+          >
+            <Plus size={20} />
+          </button>
+        </div>
+
+        <div className="flex gap-2 text-sm">
+          {[
+            ["all", "Все"],
+            ["active", "Активные"],
+            ["done", "Готовые"],
+          ].map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={
+                "px-3 py-1 rounded-full transition " +
+                (filter === key
+                  ? "bg-emerald-500 text-slate-900"
+                  : "bg-slate-700 hover:bg-slate-600 text-slate-300")
+              }
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <ul className="space-y-2">
+          {visibleTasks.length === 0 && (
+            <li className="text-center text-slate-500 py-6">Задач нет</li>
+          )}
+          {visibleTasks.map((task) => (
+            <li
+              key={task.id}
+              className="flex items-center gap-3 bg-slate-700/50 rounded-lg px-3 py-2 group"
+            >
+              <button onClick={() => toggleTask(task.id)} className="shrink-0">
+                {task.done ? (
+                  <CheckCircle2 className="text-emerald-400" size={20} />
+                ) : (
+                  <Circle className="text-slate-400" size={20} />
+                )}
+              </button>
+              <span
+                className={
+                  "flex-1 " +
+                  (task.done ? "line-through text-slate-500" : "text-slate-100")
+                }
+              >
+                {task.text}
+              </span>
+              <button
+                onClick={() => removeTask(task.id)}
+                className="opacity-0 group-hover:opacity-100 text-rose-400 hover:text-rose-300 transition"
+              >
+                <Trash2 size={18} />
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        <div className="text-sm text-slate-400 border-t border-slate-700 pt-3">
+          Выполнено {doneCount} из {tasks.length}
+        </div>
+      </div>
+    </div>
+  );
+}
